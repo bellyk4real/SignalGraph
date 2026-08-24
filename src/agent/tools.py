@@ -28,6 +28,7 @@ def find_investor_candidates(session: Session, request: InvestorCandidateRequest
         max_results=request.max_results,
         allowed_sensitivity=request.allowed_sensitivity,
     )
+    session.commit()  # persist any audit_log rows written while assembling evidence
     if not candidates:
         return InvestorCandidateResponse(
             candidates=[],
@@ -38,12 +39,14 @@ def find_investor_candidates(session: Session, request: InvestorCandidateRequest
 
 
 def get_investor_evidence(session: Session, request: InvestorEvidenceRequest) -> list[EvidenceReference]:
-    return _get_investor_evidence(
+    result = _get_investor_evidence(
         session,
         investor_id=request.investor_id,
         company_id=request.company_id,
         allowed_sensitivity=request.allowed_sensitivity,
     )
+    session.commit()  # persist audit_log rows
+    return result
 
 
 def search_relationship_memory(session: Session, request: RelationshipMemoryRequest) -> RelationshipMemoryResponse:
@@ -54,6 +57,7 @@ def search_relationship_memory(session: Session, request: RelationshipMemoryRequ
         allowed_sensitivity=request.allowed_sensitivity,
         max_results=request.max_results,
     )
+    session.commit()  # persist audit_log rows
     if not scored:
         return RelationshipMemoryResponse(
             results=[],
