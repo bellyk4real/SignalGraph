@@ -16,7 +16,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from src.db import get_session_factory
-from src.graph.models import Entity, EntityIdentifier, EntityResolutionDecision, EntityType, ResolutionDecisionType
+from src.graph.models import (
+    Entity,
+    EntityIdentifier,
+    EntityResolutionDecision,
+    EntityType,
+    ResolutionDecisionType,
+)
 from src.ingestion.models import RawRecord
 
 RULE_VERSION = "vendor_investor_matcher_v1"

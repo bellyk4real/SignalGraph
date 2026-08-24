@@ -49,7 +49,7 @@ def build_communications(session: Session) -> int:
             raw_record_id=record.id,
             communication_type=payload["communication_type"],
             sensitivity=Sensitivity(payload["sensitivity"]),
-            occurred_at=datetime.fromisoformat(payload["occurred_at"].replace("Z", "+00:00")),
+            occurred_at=datetime.fromisoformat(payload["occurred_at"]),
             raw_text=payload["raw_text"],
             redacted_text=payload["redacted_text"],
         )

@@ -1,30 +1,14 @@
-import os
-
 import pytest
 from sqlalchemy import select
 
-pytest.importorskip("psycopg")
-
-from src.db import get_engine, get_session_factory  # noqa: E402
-from src.graph.models import Entity, EntityResolutionDecision, ResolutionDecisionType  # noqa: E402
-from src.ingestion import synthetic_vendor  # noqa: E402
-from src.resolution.matcher import RULE_VERSION, resolve_vendor_investors, reverse_resolution_decision  # noqa: E402
-from src.validation.quality_gates import validate_pending_raw_records  # noqa: E402
-
-
-@pytest.fixture
-def db_session():
-    if not os.environ.get("DATABASE_URL"):
-        pytest.skip("DATABASE_URL not set; skipping DB-dependent test")
-    try:
-        get_engine().connect().close()
-    except Exception as exc:  # noqa: BLE001
-        pytest.skip(f"Postgres not reachable: {exc}")
-
-    session_factory = get_session_factory()
-    with session_factory() as session:
-        yield session
-        session.rollback()
+from src.graph.models import Entity, EntityResolutionDecision, ResolutionDecisionType
+from src.ingestion import synthetic_vendor
+from src.resolution.matcher import (
+    RULE_VERSION,
+    resolve_vendor_investors,
+    reverse_resolution_decision,
+)
+from src.validation.quality_gates import validate_pending_raw_records
 
 
 @pytest.fixture
