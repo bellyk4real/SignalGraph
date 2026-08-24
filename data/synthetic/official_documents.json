@@ -1,0 +1,22 @@
+[
+  {
+    "document_id": "D-001",
+    "source_id": "first_party_website",
+    "url": "https://www.northstar.vc/thesis",
+    "title": "Northstar Ventures — Investment Thesis",
+    "published_at": "2026-01-10T00:00:00Z",
+    "retrieved_at": "2026-08-20T00:00:00Z",
+    "full_text": "Northstar Ventures backs European climate and infrastructure founders from first product to scale. We lead Seed and Series A investments, typically writing first checks of EUR 500k-3m, and we stay hands-on through board seats and follow-on rounds.",
+    "claim_span": "We lead Seed and Series A investments"
+  },
+  {
+    "document_id": "D-002",
+    "source_id": "first_party_announcement",
+    "url": "https://www.gridflow.example/press/seed-round",
+    "title": "GridFlow GmbH raises EUR 4,000,000 seed round",
+    "published_at": "2026-05-15T00:00:00Z",
+    "retrieved_at": "2026-05-16T00:00:00Z",
+    "full_text": "GridFlow GmbH today announced a EUR 4,000,000 seed round led by Northstar Ventures, with participation from Example Capital. The round will fund GridFlow's grid-flexibility platform for industrial energy customers.",
+    "claim_span": "GridFlow GmbH today announced a EUR 4,000,000 seed round led by Northstar Ventures, with participation from Example Capital."
+  }
+]

@@ -1,0 +1,5 @@
+vendor_round_id,company_name,round_type,amount,currency,announced_on
+R-001,GridFlow GmbH,seed,4000000,EUR,2026-05-15
+R-002,GridFlow GmbH,series_a,3000000,EUR,2026-15-48
+R-003,Unknown Corp,seed,-250000,EUR,2026-06-01
+R-004,GridFlow GmbH,seed,4000000,EURO,2026-05-15
