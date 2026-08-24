@@ -1,0 +1,34 @@
+{
+  "candidates": [
+    {
+      "investor_id": "cdba2c6a-406a-44e0-938e-b5e9c581d474",
+      "investor_name": "Northstar Ventures",
+      "fit_score": 0.735,
+      "rationale": [
+        "1 accepted, evidence-backed claim(s) support this investor.",
+        "Accepted thesis explicitly mentions 'seed'.",
+        "Investor has at least one existing portfolio relationship on record."
+      ],
+      "caveats": [
+        "No structured sector/geography/cheque-size evidence in the current data; those factors were scored neutral."
+      ],
+      "evidence": [
+        {
+          "claim_id": "8b081e14-5eb4-42ed-ac34-4cbf08f02af3",
+          "document_id": "8e33fcb5-baf3-4757-bad2-c45641e66bc8",
+          "chunk_id": null,
+          "source_id": "first_party_website",
+          "source_url": "https://www.northstar.vc/thesis",
+          "excerpt": "We lead Seed and Series A investments",
+          "authority_tier": 2,
+          "published_at": "2026-01-10T00:00:00Z",
+          "retrieved_at": "2026-08-24T14:01:57.879037Z",
+          "confidence": 0.9
+        }
+      ],
+      "data_freshness": "2026-08-24T14:01:57.879037Z"
+    }
+  ],
+  "insufficient_evidence": false,
+  "retrieval_notes": []
+}
