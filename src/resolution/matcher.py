@@ -161,6 +161,24 @@ def resolve_vendor_investors(session: Session) -> ResolutionSummary:
     return summary
 
 
+def get_or_create_entity(session: Session, *, entity_type: EntityType, canonical_name: str) -> Entity:
+    """Simple lookup-or-create for entity types without a dedicated resolution
+    worked example yet (e.g. companies). Investor identity resolution has the
+    full conservative matching pipeline above; this is intentionally a plain
+    exact-name lookup, not a match-tier pipeline.
+    """
+    existing = session.scalars(
+        select(Entity).where(Entity.entity_type == entity_type, Entity.canonical_name == canonical_name)
+    ).first()
+    if existing is not None:
+        return existing
+
+    entity = Entity(entity_type=entity_type, canonical_name=canonical_name)
+    session.add(entity)
+    session.flush()
+    return entity
+
+
 def reverse_resolution_decision(session: Session, decision: EntityResolutionDecision, reason: str) -> None:
     """Marks a decision reversed. The subject/matched entity rows and their
     identifiers are untouched — resolution never destroys source data, so
