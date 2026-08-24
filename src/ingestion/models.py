@@ -63,6 +63,7 @@ class RawRecord(UUIDPKMixin, TimestampMixin, Base):
     raw_payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
     source_url: Mapped[str | None] = mapped_column(String, nullable=True)
     retrieved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    validation_status: Mapped[str] = mapped_column(String, nullable=False, default="pending")
 
 
 class SourceEvent(UUIDPKMixin, TimestampMixin, Base):
@@ -81,4 +82,5 @@ class SourceEvent(UUIDPKMixin, TimestampMixin, Base):
     event_type: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False, default="discovered_only")
     payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    content_hash: Mapped[str] = mapped_column(String, nullable=False, index=True)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

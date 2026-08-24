@@ -69,6 +69,7 @@ def test_official_documents_ingestion_is_idempotent(db_session):
 
 def test_gdelt_discovery_creates_event_only_no_raw_record(db_session):
     gdelt_discovery.main()
+    gdelt_discovery.main()
 
     events = db_session.scalars(select(SourceEvent).where(SourceEvent.source_id == "gdelt")).all()
     assert len(events) == 1

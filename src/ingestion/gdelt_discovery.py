@@ -24,16 +24,18 @@ def main() -> None:
 
     session_factory = get_session_factory()
     with session_factory() as session:
+        created = 0
         for event in events:
-            record_source_event(
+            _, was_created = record_source_event(
                 session,
                 source_id=SOURCE_ID,
                 event_type="discovered",
                 status="discovered_only",
                 payload=event,
             )
+            created += int(was_created)
         session.commit()
-        print(f"gdelt: recorded {len(events)} discovery-only source_event rows (no raw_record/claim created)")
+        print(f"gdelt: recorded {created} new discovery-only source_event rows (no raw_record/claim created)")
 
 
 if __name__ == "__main__":

@@ -13,7 +13,14 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from src.ingestion.models import IngestionRun, RawRecord, SourceEvent
+from src.ingestion.models import IngestionRun, RawRecord, SourceEvent, SourceRegistry
+
+
+class UnregisteredSourceError(Exception):
+    """Raised when a connector tries to ingest data under a source_id that has
+    no source_registry entry. See README's quality gate: "Unregistered source
+    tries to ingest data -> Reject ingestion".
+    """
 
 
 def content_hash(payload: dict) -> str:
@@ -59,7 +66,13 @@ def upsert_raw_record(
 ) -> tuple[RawRecord, bool]:
     """Idempotent on (source_id, record_type, content_hash) so rerunning a
     fixed input creates no duplicate raw_record rows.
+
+    Raises UnregisteredSourceError before writing anything if source_id has
+    no source_registry entry.
     """
+    if session.get(SourceRegistry, source_id) is None:
+        raise UnregisteredSourceError(f"source_id={source_id!r} is not registered in source_registry")
+
     hash_ = content_hash(payload)
     existing = session.scalars(
         select(RawRecord).where(
@@ -92,14 +105,29 @@ def record_source_event(
     status: str,
     payload: dict,
     raw_record_id: uuid.UUID | None = None,
-) -> SourceEvent:
+) -> tuple[SourceEvent, bool]:
+    """Idempotent on (source_id, event_type, content_hash of payload) so
+    rerunning a fixed discovery feed creates no duplicate source_event rows.
+    """
+    hash_ = content_hash(payload)
+    existing = session.scalars(
+        select(SourceEvent).where(
+            SourceEvent.source_id == source_id,
+            SourceEvent.event_type == event_type,
+            SourceEvent.content_hash == hash_,
+        )
+    ).first()
+    if existing is not None:
+        return existing, False
+
     event = SourceEvent(
         source_id=source_id,
         raw_record_id=raw_record_id,
         event_type=event_type,
         status=status,
         payload=payload,
+        content_hash=hash_,
     )
     session.add(event)
     session.flush()
-    return event
+    return event, True
