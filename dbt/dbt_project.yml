@@ -1,0 +1,17 @@
+name: signalgraph
+version: "1.0.0"
+config-version: 2
+profile: signalgraph
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  signalgraph:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: view

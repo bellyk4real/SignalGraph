@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: signalgraph_app
+    description: Tables owned by the application (src/graph, src/ingestion), written by SQLAlchemy/Alembic, not dbt.
+    schema: public
+    tables:
+      - name: entity
+      - name: entity_identifier
+      - name: entity_resolution_decision
+      - name: funding_round
+      - name: entity_relationship
+      - name: claim
+      - name: claim_evidence
+      - name: source_document
+      - name: document_chunk
+      - name: source_registry

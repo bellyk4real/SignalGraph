@@ -16,6 +16,16 @@ from src.db import Base, TimestampMixin, UUIDPKMixin
 from src.enrichment.embeddings import EMBEDDING_DIM
 
 
+def pg_enum(py_enum: type[enum.StrEnum], name: str) -> Enum:
+    """Enum(py_enum) persists the Python member *name* by default (e.g.
+    "CANDIDATE"), not its lowercase `.value` ("candidate") — values_callable
+    makes the native Postgres enum use `.value`, matching the vocabulary
+    documented in the README (README's claim status lifecycle, canonical
+    entity types, etc. are all lowercase).
+    """
+    return Enum(py_enum, name=name, values_callable=lambda e: [member.value for member in e])
+
+
 class EntityType(enum.StrEnum):
     COMPANY = "company"
     INVESTOR_FIRM = "investor_firm"
@@ -48,7 +58,7 @@ class Entity(UUIDPKMixin, TimestampMixin, Base):
 
     __tablename__ = "entity"
 
-    entity_type: Mapped[EntityType] = mapped_column(Enum(EntityType, name="entity_type"), nullable=False)
+    entity_type: Mapped[EntityType] = mapped_column(pg_enum(EntityType, "entity_type"), nullable=False)
     canonical_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
 
 
@@ -83,7 +93,7 @@ class EntityResolutionDecision(UUIDPKMixin, TimestampMixin, Base):
         UUID(as_uuid=True), ForeignKey("entity.id"), nullable=True
     )
     decision: Mapped[ResolutionDecisionType] = mapped_column(
-        Enum(ResolutionDecisionType, name="resolution_decision_type"), nullable=False
+        pg_enum(ResolutionDecisionType, "resolution_decision_type"), nullable=False
     )
     match_score: Mapped[float] = mapped_column(nullable=False)
     features: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
@@ -153,7 +163,7 @@ class SourceDocument(UUIDPKMixin, TimestampMixin, Base):
     title: Mapped[str | None] = mapped_column(String, nullable=True)
     content_hash: Mapped[str] = mapped_column(String, nullable=False, index=True)
     sensitivity: Mapped[Sensitivity] = mapped_column(
-        Enum(Sensitivity, name="sensitivity"), nullable=False, default=Sensitivity.PUBLIC
+        pg_enum(Sensitivity, "sensitivity"), nullable=False, default=Sensitivity.PUBLIC
     )
     full_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -179,7 +189,7 @@ class Claim(UUIDPKMixin, TimestampMixin, Base):
     claim_type: Mapped[str] = mapped_column(String, nullable=False)
     claim_value: Mapped[dict] = mapped_column(JSONB, nullable=False)
     status: Mapped[ClaimStatus] = mapped_column(
-        Enum(ClaimStatus, name="claim_status"), nullable=False, default=ClaimStatus.CANDIDATE
+        pg_enum(ClaimStatus, "claim_status"), nullable=False, default=ClaimStatus.CANDIDATE
     )
     source_id: Mapped[str] = mapped_column(ForeignKey("source_registry.source_id"), nullable=False)
     confidence: Mapped[float] = mapped_column(nullable=False, default=0.0)
@@ -246,7 +256,7 @@ class Communication(UUIDPKMixin, TimestampMixin, Base):
     )
     communication_type: Mapped[str] = mapped_column(String, nullable=False)
     sensitivity: Mapped[Sensitivity] = mapped_column(
-        Enum(Sensitivity, name="sensitivity"), nullable=False, default=Sensitivity.RESTRICTED
+        pg_enum(Sensitivity, "sensitivity"), nullable=False, default=Sensitivity.RESTRICTED
     )
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     raw_text: Mapped[str | None] = mapped_column(Text, nullable=True)
