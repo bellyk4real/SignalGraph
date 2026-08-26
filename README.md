@@ -441,6 +441,23 @@ API	FastAPI, optional	Typed retrieval and agent-tool endpoints
 Agent integration	Pydantic AI / Claude Agent SDK compatible	Structured tool calls and evidence-first output
 Local environment	Docker Compose	Reproducible development and demo setup
 Testing	pytest + dbt tests	Unit, integration, policy, quality, and retrieval evaluation tests
+
+Container image
+
+On every push to main that passes its own test/migration gate, .github/workflows/cd.yml builds
+and publishes the agent-tools API (src/agent/api.py) as a Docker image to GitHub Container
+Registry:
+
+bash
+docker pull ghcr.io/bellyk4real/signalgraph:latest
+docker run -p 8000:8000 -e DATABASE_URL=postgresql+psycopg://user:pass@host:5432/db \
+    ghcr.io/bellyk4real/signalgraph:latest
+
+The image only contains the FastAPI app, its runtime dependencies, and enough of the repo
+(src/, demo/, data/, infra/migrations/) to also run `uv run alembic upgrade head` or the demo
+script inside the container. It expects an already-running Postgres/pgvector instance — it does
+not bundle one. Tags: `latest` and the full commit SHA.
+
 Repository structure
 
 The tree below is the actual, current layout (not aspirational) — one file/dir per pipeline stage:
