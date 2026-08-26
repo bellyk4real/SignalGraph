@@ -1,28 +1,7 @@
-import os
-
-import pytest
 from sqlalchemy import select
 
-pytest.importorskip("psycopg")
-
-from src.db import get_engine, get_session_factory  # noqa: E402
-from src.ingestion.load_source_registry import load_registry_entries, upsert_source_registry  # noqa: E402
-from src.ingestion.models import SourceRegistry  # noqa: E402
-
-
-@pytest.fixture
-def db_session():
-    if not os.environ.get("DATABASE_URL"):
-        pytest.skip("DATABASE_URL not set; skipping DB-dependent test")
-    try:
-        get_engine().connect().close()
-    except Exception as exc:  # noqa: BLE001
-        pytest.skip(f"Postgres not reachable: {exc}")
-
-    session_factory = get_session_factory()
-    with session_factory() as session:
-        yield session
-        session.rollback()
+from src.ingestion.load_source_registry import load_registry_entries, upsert_source_registry
+from src.ingestion.models import SourceRegistry
 
 
 def test_load_registry_entries_parses_all_source_classes():

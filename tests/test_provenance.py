@@ -1,33 +1,17 @@
-import os
-
 import pytest
 from sqlalchemy import select, text
 
-pytest.importorskip("psycopg")
-
-from src.db import get_engine, get_session_factory  # noqa: E402
-from src.graph.build_claims import build_official_document_claims, build_vendor_candidate_claims, ClaimBuildSummary  # noqa: E402
-from src.graph.claims import ClaimPolicyError, accept_claim, attach_evidence, submit_claim  # noqa: E402
-from src.graph.documents import chunk_text, create_source_document  # noqa: E402
-from src.graph.models import Claim, ClaimStatus, DocumentChunk, EntityType  # noqa: E402
-from src.ingestion import official_documents, synthetic_vendor  # noqa: E402
-from src.resolution.matcher import get_or_create_entity, resolve_vendor_investors  # noqa: E402
-from src.validation.quality_gates import validate_pending_raw_records  # noqa: E402
-
-
-@pytest.fixture
-def db_session():
-    if not os.environ.get("DATABASE_URL"):
-        pytest.skip("DATABASE_URL not set; skipping DB-dependent test")
-    try:
-        get_engine().connect().close()
-    except Exception as exc:  # noqa: BLE001
-        pytest.skip(f"Postgres not reachable: {exc}")
-
-    session_factory = get_session_factory()
-    with session_factory() as session:
-        yield session
-        session.rollback()
+from src.graph.build_claims import (
+    ClaimBuildSummary,
+    build_official_document_claims,
+    build_vendor_candidate_claims,
+)
+from src.graph.claims import ClaimPolicyError, accept_claim, submit_claim
+from src.graph.documents import chunk_text
+from src.graph.models import Claim, ClaimStatus, DocumentChunk, EntityType
+from src.ingestion import official_documents, synthetic_vendor
+from src.resolution.matcher import get_or_create_entity, resolve_vendor_investors
+from src.validation.quality_gates import validate_pending_raw_records
 
 
 @pytest.fixture

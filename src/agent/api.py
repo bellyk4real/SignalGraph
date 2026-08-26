@@ -22,20 +22,23 @@ app = FastAPI(title="SignalGraph Agent Tools")
 
 @app.post("/tools/find_investor_candidates", response_model=InvestorCandidateResponse)
 def find_investor_candidates(
-    request: InvestorCandidateRequest, session: Session = Depends(get_session)
+    request: InvestorCandidateRequest,
+    session: Session = Depends(get_session),  # noqa: B008 - standard FastAPI DI pattern
 ) -> InvestorCandidateResponse:
     return tools.find_investor_candidates(session, request)
 
 
 @app.post("/tools/get_investor_evidence", response_model=list[EvidenceReference])
 def get_investor_evidence(
-    request: InvestorEvidenceRequest, session: Session = Depends(get_session)
+    request: InvestorEvidenceRequest,
+    session: Session = Depends(get_session),  # noqa: B008 - standard FastAPI DI pattern
 ) -> list[EvidenceReference]:
     return tools.get_investor_evidence(session, request)
 
 
 @app.post("/tools/search_relationship_memory", response_model=RelationshipMemoryResponse)
 def search_relationship_memory(
-    request: RelationshipMemoryRequest, session: Session = Depends(get_session)
+    request: RelationshipMemoryRequest,
+    session: Session = Depends(get_session),  # noqa: B008 - standard FastAPI DI pattern
 ) -> RelationshipMemoryResponse:
     return tools.search_relationship_memory(session, request)

@@ -6,7 +6,7 @@ official_documents only. Requires COMPANIES_HOUSE_API_KEY; raises if
 invoked without one rather than silently no-op'ing.
 """
 
-from typing import Any
+from typing import Any, Self
 
 import httpx
 from pydantic import BaseModel
@@ -43,7 +43,7 @@ class CompaniesHouseClient:
     def close(self) -> None:
         self._client.close()
 
-    def __enter__(self) -> "CompaniesHouseClient":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *exc_info: object) -> None:
