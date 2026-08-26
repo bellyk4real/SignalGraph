@@ -1,0 +1,14 @@
+.git
+.github
+.idea
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.env
+tests/
+dbt/target
+dbt/logs
+architecture/
+demo/example_outputs
