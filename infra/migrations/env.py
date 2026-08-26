@@ -9,6 +9,7 @@ from src.settings import get_settings
 # Import model modules so they register their tables on Base.metadata
 # before autogenerate/upgrade runs. Sprints add to this list as they
 # introduce new `src/<package>/models.py` modules.
+import src.graph.models  # noqa: F401
 import src.ingestion.models  # noqa: F401
 
 config = context.config
