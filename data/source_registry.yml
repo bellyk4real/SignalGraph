@@ -1,2 +1,134 @@
-# Populated in Sprint 2 (sprint-02-source-registry).
-sources: []
+# Source registry fixture — one entry per source class in the README's
+# "Source policy" table. Loaded by src/ingestion/load_source_registry.py.
+sources:
+  - source_id: companies_house
+    source_name: UK Companies House
+    source_type: government_registry
+    authority_tier: 1
+    permitted_claim_types:
+      - legal_name
+      - company_status
+      - incorporation_date
+      - registered_office
+      - officer_relationship
+    freshness_sla_hours: 168
+    pii_classification: public
+    allowed_for_agent_retrieval: true
+    requires_human_review: false
+    can_create_accepted_claims: true
+    policy_note: "Legal identity, status, officers, filings. Accepted within source scope."
+
+  - source_id: sec_edgar
+    source_name: SEC EDGAR
+    source_type: government_registry
+    authority_tier: 1
+    permitted_claim_types:
+      - legal_name
+      - company_status
+      - incorporation_date
+      - registered_office
+      - officer_relationship
+    freshness_sla_hours: 168
+    pii_classification: public
+    allowed_for_agent_retrieval: true
+    requires_human_review: false
+    can_create_accepted_claims: true
+    policy_note: "Legal identity, status, officers, filings. Accepted within source scope."
+
+  - source_id: first_party_website
+    source_name: Company/investor first-party website
+    source_type: first_party_website
+    authority_tier: 2
+    permitted_claim_types:
+      - thesis
+      - portfolio
+      - team
+      - official_description
+    freshness_sla_hours: 720
+    pii_classification: public
+    allowed_for_agent_retrieval: true
+    requires_human_review: false
+    can_create_accepted_claims: true
+    policy_note: "Thesis, portfolio, team, official descriptions. Accepted with retained evidence."
+
+  - source_id: first_party_announcement
+    source_name: Company/investor press release
+    source_type: first_party_announcement
+    authority_tier: 2
+    permitted_claim_types:
+      - funding_round
+      - participation
+      - milestone
+    freshness_sla_hours: 168
+    pii_classification: public
+    allowed_for_agent_retrieval: true
+    requires_human_review: false
+    can_create_accepted_claims: true
+    policy_note: "Funding rounds, participation, milestones. Accepted when explicitly stated."
+
+  - source_id: gdelt
+    source_name: GDELT
+    source_type: discovery_feed
+    authority_tier: 4
+    permitted_claim_types: []
+    freshness_sla_hours: 24
+    pii_classification: public
+    allowed_for_agent_retrieval: false
+    requires_human_review: false
+    can_create_accepted_claims: false
+    policy_note: "News discovery and refresh triggers only. Must fetch and validate the original source; never creates an accepted claim on its own."
+
+  - source_id: reference_graph
+    source_name: Wikidata / OpenAlex
+    source_type: reference_graph
+    authority_tier: 4
+    permitted_claim_types:
+      - alias
+      - cross_id
+      - research_context
+    freshness_sla_hours: 2160
+    pii_classification: public
+    allowed_for_agent_retrieval: false
+    requires_human_review: false
+    can_create_accepted_claims: false
+    policy_note: "Aliases, cross-IDs, research context. Requires corroboration before acceptance."
+
+  - source_id: vendor_enrichment
+    source_name: Vendor/API export
+    source_type: vendor_enrichment
+    authority_tier: 4
+    permitted_claim_types:
+      - candidate_fact
+      - match_candidate
+    freshness_sla_hours: 168
+    pii_classification: internal
+    allowed_for_agent_retrieval: false
+    requires_human_review: false
+    can_create_accepted_claims: false
+    policy_note: "Candidate facts and match candidates. Must be validated/corroborated before acceptance."
+
+  - source_id: opensanctions
+    source_name: OpenSanctions
+    source_type: screening_source
+    authority_tier: 5
+    permitted_claim_types:
+      - screening_match
+    freshness_sla_hours: 24
+    pii_classification: internal
+    allowed_for_agent_retrieval: false
+    requires_human_review: true
+    can_create_accepted_claims: false
+    policy_note: "Possible-match screening only. Review-only; never an automatic conclusion, excluded from general agent retrieval."
+
+  - source_id: synthetic_communications
+    source_name: Synthetic email/call corpus
+    source_type: communications
+    authority_tier: 3
+    permitted_claim_types:
+      - relationship_context
+    freshness_sla_hours: null
+    pii_classification: restricted
+    allowed_for_agent_retrieval: true
+    requires_human_review: false
+    can_create_accepted_claims: true
+    policy_note: "Permission-aware relationship memory. Restricted by access policy; not available through generic search."
