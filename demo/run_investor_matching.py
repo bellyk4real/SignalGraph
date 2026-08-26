@@ -5,19 +5,35 @@ the README's 14 demo-walkthrough steps as it happens.
 Usage: uv run python -m demo.run_investor_matching
 """
 
-import json
 import uuid
 from pathlib import Path
 
 from sqlalchemy import select
 
-from src.agent.schemas import InvestorCandidateRequest, InvestorEvidenceRequest, RelationshipMemoryRequest
-from src.agent.tools import find_investor_candidates, get_investor_evidence, search_relationship_memory
+from src.agent.schemas import (
+    InvestorCandidateRequest,
+    InvestorEvidenceRequest,
+    RelationshipMemoryRequest,
+)
+from src.agent.tools import (
+    find_investor_candidates,
+    get_investor_evidence,
+    search_relationship_memory,
+)
 from src.db import get_session_factory
-from src.graph.build_claims import ClaimBuildSummary, build_official_document_claims, build_vendor_candidate_claims
+from src.graph.build_claims import (
+    ClaimBuildSummary,
+    build_official_document_claims,
+    build_vendor_candidate_claims,
+)
 from src.graph.build_communications import build_communications
 from src.graph.models import Claim, ClaimStatus, Entity, EntityRelationship, EntityType
-from src.ingestion import gdelt_discovery, official_documents, synthetic_communications, synthetic_vendor
+from src.ingestion import (
+    gdelt_discovery,
+    official_documents,
+    synthetic_communications,
+    synthetic_vendor,
+)
 from src.ingestion.load_source_registry import main as load_source_registry
 from src.ingestion.models import RawRecord
 from src.resolution.matcher import resolve_vendor_investors

@@ -1,18 +1,19 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
-
 from alembic import context
-from src.db import Base
-from src.settings import get_settings
+from sqlalchemy import engine_from_config, pool
 
 # Import model modules so they register their tables on Base.metadata
 # before autogenerate/upgrade runs. Sprints add to this list as they
-# introduce new `src/<package>/models.py` modules.
-import src.agent.models  # noqa: F401
-import src.graph.models  # noqa: F401
-import src.ingestion.models  # noqa: F401
-import src.validation.models  # noqa: F401
+# introduce new `src/<package>/models.py` modules. Aliased so each import
+# binds a distinct name -- otherwise ruff can't tell the separate
+# `import src.<x>.models` statements apart (they all bind `src`).
+from src.agent import models as _agent_models  # noqa: F401
+from src.db import Base
+from src.graph import models as _graph_models  # noqa: F401
+from src.ingestion import models as _ingestion_models  # noqa: F401
+from src.settings import get_settings
+from src.validation import models as _validation_models  # noqa: F401
 
 config = context.config
 
