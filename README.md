@@ -1,5 +1,7 @@
 SignalGraph
 
+[![CI](https://github.com/bellyk4real/SignalGraph/actions/workflows/ci.yml/badge.svg)](https://github.com/bellyk4real/SignalGraph/actions/workflows/ci.yml)
+
     Evidence-first investor intelligence for trustworthy agent retrieval.
 
 SignalGraph is a provenance-first operational knowledge graph for companies, investor firms, people, funds, funding rounds, documents, and communications. It creates a governed data spine that AI agents and product workflows can use to identify credible investor matches, retrieve relationship context, and explain why a fact is trustworthy.
