@@ -7,11 +7,13 @@ import enum
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, DateTime, Enum, ForeignKey, Numeric, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import CheckConstraint, Computed, DateTime, Enum, ForeignKey, Index, Numeric, String, Text, func
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.db import Base, TimestampMixin, UUIDPKMixin
+from src.enrichment.embeddings import EMBEDDING_DIM
 
 
 class EntityType(enum.StrEnum):
@@ -171,6 +173,9 @@ class Claim(UUIDPKMixin, TimestampMixin, Base):
     entity_relationship_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("entity_relationship.id"), nullable=True
     )
+    raw_record_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("raw_record.id"), nullable=True
+    )
     claim_type: Mapped[str] = mapped_column(String, nullable=False)
     claim_value: Mapped[dict] = mapped_column(JSONB, nullable=False)
     status: Mapped[ClaimStatus] = mapped_column(
@@ -188,8 +193,10 @@ class Claim(UUIDPKMixin, TimestampMixin, Base):
 class DocumentChunk(UUIDPKMixin, TimestampMixin, Base):
     """A full-text/vector-searchable segment of a source_document.
 
-    FTS tsvector and pgvector embedding columns are added in Sprint 7
-    (sprint-07-claims-evidence-search) once the chunking/embedding pipeline exists.
+    `search_vector` is a Postgres-generated column (no app-side sync needed);
+    `embedding` is populated by src.enrichment.embeddings at chunk-creation
+    time. Hybrid retrieval (Sprint 9) combines both with SQL filters and
+    graph traversal.
     """
 
     __tablename__ = "document_chunk"
@@ -199,6 +206,12 @@ class DocumentChunk(UUIDPKMixin, TimestampMixin, Base):
     )
     chunk_index: Mapped[int] = mapped_column(nullable=False)
     chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
+    search_vector: Mapped[str] = mapped_column(
+        TSVECTOR, Computed("to_tsvector('english', chunk_text)", persisted=True), nullable=True
+    )
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM), nullable=True)
+
+    __table_args__ = (Index("ix_document_chunk_search_vector", "search_vector", postgresql_using="gin"),)
 
 
 class ClaimEvidence(UUIDPKMixin, TimestampMixin, Base):
