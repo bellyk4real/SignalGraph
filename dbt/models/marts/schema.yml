@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: mart_current_accepted_claims
+    description: Agent-safe view of accepted, evidence-backed, source-authorized claims.
+    columns:
+      - name: claim_id
+        tests: [not_null, unique]
+      # evidence_count >= 1 is guaranteed by the WHERE clause in this model's
+      # SQL, and separately enforced app-side by src/graph/claims.accept_claim.

@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: stg_entities
+    columns:
+      - name: entity_id
+        tests: [not_null, unique]
+      - name: entity_type
+        tests:
+          - accepted_values:
+              values: ['company', 'investor_firm', 'person', 'fund']
+
+  - name: stg_claims
+    columns:
+      - name: claim_id
+        tests: [not_null, unique]
+      - name: subject_entity_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_entities')
+              field: entity_id
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['candidate', 'accepted', 'disputed', 'superseded', 'rejected']
+
+  - name: stg_funding_rounds
+    columns:
+      - name: funding_round_id
+        tests: [not_null, unique]
+      - name: company_entity_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_entities')
+              field: entity_id
+
+  - name: stg_source_registry
+    columns:
+      - name: source_id
+        tests: [not_null, unique]

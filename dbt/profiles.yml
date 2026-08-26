@@ -1,0 +1,15 @@
+# Local dev profile. Loaded via DBT_PROFILES_DIR=dbt (see README quick start).
+# Defaults match infra/docker-compose.yml / .env.example so `dbt build` works
+# out of the box against the local Postgres/pgvector container.
+signalgraph:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('PGHOST', 'localhost') }}"
+      user: "{{ env_var('PGUSER', 'signalgraph') }}"
+      password: "{{ env_var('PGPASSWORD', 'signalgraph') }}"
+      port: "{{ env_var('PGPORT', '5432') | as_number }}"
+      dbname: "{{ env_var('PGDATABASE', 'signalgraph') }}"
+      schema: public
+      threads: 4
