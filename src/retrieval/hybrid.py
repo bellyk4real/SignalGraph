@@ -17,6 +17,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from src.agent.audit import record_access
 from src.agent.schemas import EvidenceReference, InvestorCandidate
 from src.enrichment.embeddings import get_embedding_provider
 from src.graph.models import (
@@ -67,8 +68,30 @@ def _evidence_for_claim(session: Session, claim: Claim, allowed_sensitivity: str
     refs = []
     for evidence in session.scalars(select(ClaimEvidence).where(ClaimEvidence.claim_id == claim.id)).all():
         document = session.get(SourceDocument, evidence.source_document_id)
-        if document is None or SENSITIVITY_RANK.get(document.sensitivity.value, 0) > allowed_rank:
+        if document is None:
             continue
+        if SENSITIVITY_RANK.get(document.sensitivity.value, 0) > allowed_rank:
+            record_access(
+                session,
+                action="get_investor_evidence",
+                subject_type="source_document",
+                subject_id=document.id,
+                requested_sensitivity=allowed_sensitivity,
+                resource_sensitivity=document.sensitivity.value,
+                decision="denied",
+                detail=f"claim_id={claim.id}",
+            )
+            continue
+        record_access(
+            session,
+            action="get_investor_evidence",
+            subject_type="source_document",
+            subject_id=document.id,
+            requested_sensitivity=allowed_sensitivity,
+            resource_sensitivity=document.sensitivity.value,
+            decision="allowed",
+            detail=f"claim_id={claim.id}",
+        )
         refs.append(
             EvidenceReference(
                 claim_id=claim.id,
@@ -228,7 +251,31 @@ def search_relationship_memory(
     communications = session.scalars(
         select(Communication).where(Communication.id.in_(communication_ids))
     ).all()
-    permitted = [c for c in communications if SENSITIVITY_RANK.get(c.sensitivity.value, 2) <= allowed_rank]
+
+    permitted = []
+    for comm in communications:
+        if SENSITIVITY_RANK.get(comm.sensitivity.value, 2) <= allowed_rank:
+            permitted.append(comm)
+            record_access(
+                session,
+                action="search_relationship_memory",
+                subject_type="communication",
+                subject_id=comm.id,
+                requested_sensitivity=allowed_sensitivity,
+                resource_sensitivity=comm.sensitivity.value,
+                decision="allowed",
+            )
+        else:
+            record_access(
+                session,
+                action="search_relationship_memory",
+                subject_type="communication",
+                subject_id=comm.id,
+                requested_sensitivity=allowed_sensitivity,
+                resource_sensitivity=comm.sensitivity.value,
+                decision="denied",
+            )
+
     if not permitted:
         return []
 
