@@ -443,53 +443,63 @@ Local environment	Docker Compose	Reproducible development and demo setup
 Testing	pytest + dbt tests	Unit, integration, policy, quality, and retrieval evaluation tests
 Repository structure
 
+The tree below is the actual, current layout (not aspirational) — one file/dir per pipeline stage:
+
 text
 signalgraph/
 ├── README.md
+├── pyproject.toml, uv.lock, alembic.ini
 ├── architecture/
-│   ├── architecture.md
-│   ├── data-model.md
-│   ├── source-policy.md
+│   ├── architecture.md, data-model.md, source-policy.md, threat-model.md
 │   ├── adr-001-postgres-graph.md
 │   ├── adr-002-provenance-first-claims.md
-│   ├── adr-004-source-registry.md
-│   └── threat-model.md
+│   └── adr-004-source-registry.md
 ├── infra/
 │   ├── docker-compose.yml
-│   └── migrations/
+│   └── migrations/            # Alembic; 8 migrations, env.py wired to src.db.Base.metadata
 ├── src/
+│   ├── db.py                  # engine/session factory, UUIDPKMixin/TimestampMixin
+│   ├── settings.py            # pydantic-settings, reads .env
 │   ├── ingestion/
-│   │   ├── companies_house.py
-│   │   ├── official_documents.py
-│   │   ├── gdelt_discovery.py
-│   │   ├── synthetic_vendor.py
-│   │   └── synthetic_communications.py
+│   │   ├── base.py            # content-hashing + idempotent raw_record/source_event/ingestion_run writes
+│   │   ├── models.py          # SourceRegistry, IngestionRun, RawRecord, SourceEvent
+│   │   ├── schemas.py, load_source_registry.py
+│   │   ├── synthetic_vendor.py, synthetic_communications.py, official_documents.py
+│   │   ├── gdelt_discovery.py     # discovery-only, never creates a raw_record/claim
+│   │   └── companies_house.py     # typed connector, not wired into the demo pipeline
 │   ├── validation/
+│   │   ├── schemas.py, models.py (Quarantine), quality_gates.py
+│   ├── graph/                  # canonical knowledge graph (entity/claim/evidence/etc.) + claim lifecycle
+│   │   ├── models.py, claims.py, documents.py, build_claims.py, build_communications.py
 │   ├── resolution/
+│   │   └── matcher.py          # conservative entity resolution, reversible decisions
 │   ├── enrichment/
+│   │   └── embeddings.py       # pluggable EmbeddingProvider (deterministic offline default)
 │   ├── retrieval/
+│   │   ├── ranking.py, hybrid.py
 │   └── agent/
+│       ├── schemas.py, tools.py, api.py (FastAPI), models.py + audit.py (audit_log)
 ├── dbt/
-│   ├── models/
-│   ├── tests/
-│   └── macros/
+│   ├── dbt_project.yml, profiles.yml
+│   ├── models/staging/, models/marts/ (mart_current_accepted_claims)
+│   └── tests/
 ├── data/
-│   ├── synthetic/
-│   └── source_registry.yml
+│   ├── synthetic/               # vendor feed (incl. the faulty rows), communications, official documents
+│   └── source_registry.yml      # all 8 source classes from the Source policy table
 ├── tests/
-│   ├── test_ingestion_quality.py
-│   ├── test_source_policy.py
-│   ├── test_entity_resolution.py
-│   ├── test_provenance.py
-│   ├── test_permissions.py
-│   └── test_retrieval_evals.py
+│   ├── conftest.py               # shared db_session fixture
+│   ├── test_ingestion_quality.py, test_source_policy.py, test_entity_resolution.py
+│   ├── test_provenance.py, test_permissions.py, test_retrieval_evals.py
 └── demo/
+    ├── run_investor_matching.py  # runs the 14-step walkthrough below end to end
     ├── walkthrough.md
     └── example_outputs/
 
 Quick start
 
-    The implementation is in progress. The commands below define the intended local developer workflow.
+    Implemented and runnable end to end — this is not aspirational. The commands below
+    are exactly what CI/the demo/the test suite run; see "Project status" for what's
+    built versus still on the roadmap.
 
 Prerequisites
 
@@ -511,12 +521,12 @@ cp .env.example .env
 2. Start local services
 
 bash
-docker compose up -d postgres
+docker compose -f infra/docker-compose.yml up -d postgres
 
 3. Install application dependencies
 
 bash
-uv sync
+uv sync --extra dev
 # or: pip install -e '.[dev]'
 
 4. Apply migrations and load source policies
@@ -535,9 +545,7 @@ uv run python -m src.ingestion.official_documents
 6. Build transformations and run tests
 
 bash
-cd dbt
-uv run dbt build
-cd ..
+cd dbt && DBT_PROFILES_DIR=. uv run dbt build && cd ..
 uv run pytest
 
 7. Run the demo workflow
@@ -547,7 +555,10 @@ uv run python -m demo.run_investor_matching
 
 Demo walkthrough
 
-The completed demo demonstrates both successful behaviour and controlled failure modes:
+`uv run python -m demo.run_investor_matching` (see `demo/walkthrough.md`) runs this end to end
+against the synthetic fixtures and prints every step below as it happens. Sample output from
+steps 10 and 11 is captured in `demo/example_outputs/`. Every step is implemented and runs
+against real data except the last, which is intentionally not — see the note below.
 
     Start PostgreSQL/pgvector and load the source registry.
 
@@ -576,6 +587,8 @@ The completed demo demonstrates both successful behaviour and controlled failure
     Repeat under insufficient permission and show deny/redaction behaviour.
 
     Update a source document and show targeted downstream refresh of claims/chunks/embeddings.
+    Not yet implemented — incremental document refresh is a near-term roadmap item (see Roadmap below);
+    the demo script says so explicitly rather than faking the step.
 
 Evaluation criteria
 Area	Target
@@ -588,6 +601,14 @@ Evidence coverage	Every recommendation rationale includes supporting evidence
 Unsupported claims	Zero unsupported factual assertions in curated evaluation prompts
 Sensitive data	No restricted fixture leaks in permission-negative tests
 Retrieval	Establish and document retrieval precision@5 against labelled fixtures
+
+All rows above except Retrieval are exercised by `tests/` against the current fixture set (31
+tests, `uv run pytest`) — see the row-to-test mapping in each test module's docstring/name.
+Retrieval precision@5 against a labelled fixture set has not been built; `tests/test_retrieval_evals.py`
+currently checks correctness of individual queries (evidence present, permission-filtered,
+insufficient_evidence returned when appropriate), not precision/recall at scale. That remains
+open — see "Richer retrieval evaluation dataset" in Roadmap.
+
 Deliberate design decisions
 PostgreSQL rather than a dedicated graph database
 
@@ -609,7 +630,8 @@ Near-term
 
     Manual-review interface for entity-resolution and claim decisions.
 
-    Companies House API connector and permitted public-source connectors.
+    Wire the existing typed Companies House connector (src/ingestion/companies_house.py, currently
+    untested against the live API and not called by the demo pipeline) and other permitted public-source connectors into the ingestion pipeline.
 
     Incremental document fetches and content-change processing.
 
@@ -635,18 +657,25 @@ Later
 
 Project status
 
-Design and implementation planning.
-
-The PRD, source policy, data model, quality strategy, and MVP delivery plan are complete. The next implementation sequence is:
+MVP implemented and verified end to end. All seven stages of the original implementation
+sequence are built, tested, and runnable against a local Postgres/pgvector instance:
 
 text
-1. Local Postgres + pgvector environment
-2. Source registry and migrations
-3. Synthetic vendor/communications ingestion
-4. Validation and quarantine
-5. Entity resolution and canonical graph
-6. Claims/evidence/document search
-7. Agent retrieval tools and evaluation suite
+1. Local Postgres + pgvector environment      done — infra/docker-compose.yml, infra/migrations/ (8 migrations)
+2. Source registry and migrations             done — data/source_registry.yml, src/ingestion/load_source_registry.py
+3. Synthetic vendor/communications ingestion   done — src/ingestion/ (idempotent on rerun)
+4. Validation and quarantine                   done — src/validation/ (quality gates, reason codes)
+5. Entity resolution and canonical graph       done — src/resolution/, src/graph/ (conservative, reversible)
+6. Claims/evidence/document search             done — src/graph/claims.py, dbt/ (FTS + pgvector)
+7. Agent retrieval tools and evaluation suite   done — src/agent/, src/retrieval/, tests/
+
+Run `uv run python -m demo.run_investor_matching` for the full walkthrough, or `uv run pytest`
+for the test suite (31 tests, all passing as of this writing). See "Roadmap" above for what's
+deliberately out of scope for the MVP — most notably incremental document/claim refresh and a
+manual-review interface for entity-resolution and claim decisions.
+
+Each stage above was built and merged as its own pull request, one per implementation sprint,
+in the order listed.
 
 License and data notice
 
