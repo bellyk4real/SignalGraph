@@ -1,0 +1,20 @@
+[
+  {
+    "communication_id": "C-001",
+    "communication_type": "email",
+    "sensitivity": "restricted",
+    "occurred_at": "2026-05-20T09:30:00Z",
+    "participants": ["GridFlow GmbH", "Northstar Ventures", "Jane Doe"],
+    "raw_text": "We spoke with Northstar Ventures last quarter. Jane Doe was interested in GridFlow's grid-flexibility work, but asked us to reconnect after our first commercial deployment. Please do not treat this as a warm introduction without asking me first.",
+    "redacted_text": "We spoke with [INVESTOR] last quarter. [CONTACT] was interested in [COMPANY]'s grid-flexibility work, but asked us to reconnect after our first commercial deployment. Please do not treat this as a warm introduction without asking me first."
+  },
+  {
+    "communication_id": "C-002",
+    "communication_type": "call_transcript",
+    "sensitivity": "internal",
+    "occurred_at": "2026-06-02T14:00:00Z",
+    "participants": ["GridFlow GmbH", "Example Capital"],
+    "raw_text": "Example Capital confirmed interest in participating in GridFlow's seed round alongside the lead investor, pending standard diligence.",
+    "redacted_text": "[INVESTOR] confirmed interest in participating in [COMPANY]'s seed round alongside the lead investor, pending standard diligence."
+  }
+]
