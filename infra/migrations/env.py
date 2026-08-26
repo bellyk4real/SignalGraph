@@ -11,6 +11,7 @@ from src.settings import get_settings
 # introduce new `src/<package>/models.py` modules.
 import src.graph.models  # noqa: F401
 import src.ingestion.models  # noqa: F401
+import src.validation.models  # noqa: F401
 
 config = context.config
 
